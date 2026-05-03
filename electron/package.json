@@ -1,0 +1,52 @@
+{
+  "name": "opera-sante",
+  "version": "1.0.0",
+  "description": "Opera sante - Gestion cabinet dentaire (application locale)",
+  "main": "main.js",
+  "author": "Opera sante",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.operasante.app",
+    "productName": "Opera sante",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js"
+    ],
+    "extraResources": [
+      {
+        "from": "backend-dist",
+        "to": "backend-dist"
+      },
+      {
+        "from": "frontend-dist",
+        "to": "frontend-dist"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": "nsis",
+      "artifactName": "OperaSante-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Opera sante"
+    }
+  }
+}

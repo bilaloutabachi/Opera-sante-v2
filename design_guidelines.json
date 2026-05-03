@@ -1,0 +1,110 @@
+{
+  "theme": "Light",
+  "archetype": "1 (Organic & Earthy)",
+  "color_palette": {
+    "background": {
+      "primary": "bg-stone-50",
+      "secondary": "bg-white",
+      "tertiary": "bg-stone-100"
+    },
+    "text": {
+      "primary": "text-stone-900",
+      "secondary": "text-stone-500",
+      "muted": "text-stone-400",
+      "inverse": "text-white"
+    },
+    "brand": {
+      "primary": "bg-emerald-700",
+      "primary_hover": "bg-emerald-800",
+      "primary_text": "text-emerald-700",
+      "accent": "bg-sky-600"
+    },
+    "accents": {
+      "success": "text-emerald-700 bg-emerald-50 border-emerald-200",
+      "warning": "text-amber-700 bg-amber-50 border-amber-200",
+      "danger": "text-rose-700 bg-rose-50 border-rose-200"
+    },
+    "borders": "border-stone-200"
+  },
+  "typography": {
+    "fonts": {
+      "headings": "'Manrope', sans-serif",
+      "body": "'IBM Plex Sans', sans-serif"
+    },
+    "hierarchy": {
+      "h1": "text-4xl md:text-5xl font-extrabold tracking-tight text-stone-900",
+      "h2": "text-2xl md:text-3xl font-bold tracking-tight text-stone-900",
+      "h3": "text-xl md:text-2xl font-semibold tracking-tight text-stone-800",
+      "h4": "text-lg md:text-xl font-semibold tracking-tight text-stone-800",
+      "body": "text-base font-normal leading-relaxed text-stone-600",
+      "small": "text-sm font-medium tracking-wide text-stone-500",
+      "overline": "text-xs font-bold uppercase tracking-[0.2em] text-stone-500"
+    }
+  },
+  "surfaces": {
+    "dashboard_card": "bg-white border border-stone-200 rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200",
+    "sidebar": "bg-stone-50 border-r border-stone-200",
+    "header": "bg-white border-b border-stone-200 sticky top-0 z-50",
+    "scanner_input": "bg-white border-2 border-stone-300 rounded-2xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 text-center text-3xl font-mono transition-all",
+    "alert_card_danger": "bg-rose-50 border border-rose-200 rounded-xl shadow-sm"
+  },
+  "spacing_and_layout": {
+    "general": "Generous internal padding (p-6, p-8) for containers. Generous gaps (gap-6, gap-8) between sections.",
+    "grid_dashboard": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "grid_bento": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8"
+  },
+  "components_strategy": {
+    "buttons": "Rounded-lg font-semibold px-6 py-2. Primary: bg-emerald-700 text-white hover:bg-emerald-800. Secondary: bg-white border border-stone-200 text-stone-700 hover:bg-stone-50.",
+    "tables": "Shadcn UI table. Clean borders, left-aligned headers. Zebra striping (even:bg-stone-50) for easier reading of dense medical rows. Stick header.",
+    "forms": "Shadcn UI Form, Input, Select. Stacked labels. Clear error states with rose text and border.",
+    "dialogs": "Shadcn Dialog. Use for quick IN/OUT scanning manual overrides or adding new supplier.",
+    "toast": "Sonner toast for scan success/failure (Audio cue matching the visual toast).",
+    "charts": "Recharts for simple bar charts of stock usage over time. Use emerald and amber colors."
+  },
+  "motion_and_interactions": {
+    "hover": "Subtle transform and shadow increase on cards. Color shift on interactive elements.",
+    "focus": "Clear focus rings (ring-2 ring-emerald-500/50) on all inputs for accessibility.",
+    "scanner": "When an item is successfully scanned, a brief green flash on the input background and a scaling micro-animation on the success message."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "usage": "Use stroke-width 2 or 1.5. Clean, consistent sizing (w-5 h-5 for inline, w-8 h-8 for dashboard metrics)."
+  },
+  "images": {
+    "hero_login": {
+      "url": "https://images.pexels.com/photos/5355864/pexels-photo-5355864.jpeg",
+      "description": "Professional female dentist sitting in a modern, well-equipped dental office. Use for login screen if present, or welcome modal."
+    },
+    "empty_state": {
+      "url": "https://images.pexels.com/photos/7803054/pexels-photo-7803054.jpeg",
+      "description": "A female dentist cleaning a patient's teeth in a modern dental clinic. Use for empty state backgrounds with a white/50 overlay."
+    }
+  },
+  "accessibility_and_testing": {
+    "data_testid": "MANDATORY on all interactive elements. Example: data-testid='scan-input', data-testid='submit-order'",
+    "contrast": "Ensure all text meets APCA contrast standards. Never use gray-on-gray for crucial data.",
+    "motion": "Respect prefers-reduced-motion."
+  },
+  "features_spec": {
+    "language": "French",
+    "modules": [
+      "Dashboard (Metrics: total products, low stock, expiring soon, recent activity)",
+      "Inventaire (Product list, barcode, stock, expiry, search, filter)",
+      "Scanner (Dedicated scan page, auto-focused input, quick IN/OUT switch)",
+      "Mouvements (History of IN/OUT, reasons)",
+      "Fournisseurs (Suppliers CRUD)",
+      "Commandes (Orders management, draft/sent/received)",
+      "Alertes (Panel for low stock, expiring)"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color palette and typography. Make sure the app looks trustworthy, clinical, and professional.",
+    "Ensure the application is single-page or uses robust routing. It is a local desktop app (no auth needed).",
+    "Focus heavily on the 'Scanner' UI: the input field must automatically regain focus after a scan so the user doesn't have to touch the mouse.",
+    "Implement Shadcn UI components but customize them to match the Organic & Earthy archetype (Stone/Emerald theme). Overuse of standard Shadcn gray looks boring; tint it toward stone.",
+    "In the tables, display urgency clearly (e.g., rose-50 background row or icon for low stock/expired items).",
+    "Install `lucide-react` for icons.",
+    "Add font links for Manrope and IBM Plex Sans in index.html or layout. (e.g., from Google Fonts).",
+    "The UI text must be entirely in French, e.g., 'Tableau de bord', 'Inventaire', 'Scanner', 'Mouvements'."
+  ]
+}
