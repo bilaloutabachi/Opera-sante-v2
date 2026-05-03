@@ -176,16 +176,16 @@ function StatPill({ label, value, tone = "default", to, testId }) {
     warning: "bg-amber-50 border-amber-200",
     danger: "bg-rose-50 border-rose-200",
     success: "bg-emerald-50 border-emerald-200",
-    critical: "bg-stone-900 border-2 border-rose-700",
+    critical: "bg-red-800 border-2 border-red-900",
   };
   const valueTone = {
     default: "text-stone-900",
     warning: "text-amber-800",
     danger: "text-rose-700",
     success: "text-emerald-700",
-    critical: "text-rose-100",
+    critical: "text-red-50",
   };
-  const labelTone = tone === "critical" ? "text-rose-200" : "text-stone-500";
+  const labelTone = tone === "critical" ? "text-red-100" : "text-stone-500";
   const content = (
     <Card className={`px-5 py-4 border transition-all hover:-translate-y-0.5 hover:shadow-sm ${tones[tone]}`} data-testid={testId}>
       <div className={`text-[10px] font-bold uppercase tracking-[0.18em] ${labelTone}`}>{label}</div>

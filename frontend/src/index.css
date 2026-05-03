@@ -71,14 +71,14 @@ code, .font-mono {
 .row-expired {
     background-color: #fff1f2 !important;
 }
-/* Stock épuisé : rouge très foncé avec bordure gauche épaisse */
+/* Stock épuisé : rouge foncé bg-red-800 */
 .row-out-of-stock {
-    background-color: #450a0a !important; /* red-950 */
-    color: #fee2e2 !important; /* red-100 */
-    border-left: 4px solid #991b1b !important; /* red-800 */
+    background-color: #991b1b !important; /* red-800 */
+    color: #fef2f2 !important; /* red-50 */
+    border-left: 4px solid #7f1d1d !important; /* red-900 */
 }
 .row-out-of-stock td {
-    color: #fee2e2 !important;
+    color: #fef2f2 !important;
 }
 .row-out-of-stock .text-stone-900,
 .row-out-of-stock .text-stone-700,

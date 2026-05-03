@@ -30,9 +30,9 @@ export default function Alerts() {
       warning: "bg-amber-50 border-amber-200 text-amber-800",
       danger: "bg-rose-50 border-rose-200 text-rose-800",
       success: "bg-emerald-50 border-emerald-200 text-emerald-800",
-      critical: "bg-stone-900 border-2 border-rose-700 text-rose-100",
+      critical: "bg-red-800 border-2 border-red-900 text-red-50",
     };
-    const iconBg = tone === "critical" ? "bg-rose-900/60" : "bg-white/60";
+    const iconBg = tone === "critical" ? "bg-red-900/60" : "bg-white/60";
     return (
       <Card className={`p-5 border ${tones[tone]}`} data-testid={testId}>
         <div className="flex items-center gap-4">
@@ -138,7 +138,7 @@ export default function Alerts() {
       <Card className="bg-white border-stone-200 p-6">
         <Tabs defaultValue={counts.out > 0 ? "out" : "low"} data-testid="alerts-tabs">
           <TabsList className="bg-stone-100">
-            <TabsTrigger value="out" data-testid="tab-out-of-stock" className="data-[state=active]:bg-stone-900 data-[state=active]:text-rose-100">
+            <TabsTrigger value="out" data-testid="tab-out-of-stock" className="data-[state=active]:bg-red-800 data-[state=active]:text-red-50">
               Stock épuisé ({counts.out})
             </TabsTrigger>
             <TabsTrigger value="low" data-testid="tab-low-stock">Stock faible ({counts.low})</TabsTrigger>

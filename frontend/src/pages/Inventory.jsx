@@ -281,7 +281,7 @@ export default function Inventory() {
                     ? "row-low-stock"
                     : "";
               const stripe = status.tone === "critical"
-                ? "bg-red-800"
+                ? "bg-red-900"
                 : status.tone === "danger"
                   ? "bg-rose-500"
                   : status.tone === "warning"
