@@ -893,8 +893,10 @@ async def reorder_suggestions():
                 continue
             enr = await _enrich_with_usage(conn, dict(p))
             monthly = enr.get("avg_monthly_usage", 0) or 0
-            target = max(monthly, min_t * 2)
-            suggested = max(1, int(round(target - qty)))
+            # Quantité suggérée = (seuil x 2) - stock actuel
+            # Permet de commander assez pour avoir le double du seuil en stock,
+            # pour éviter de recommander trop souvent.
+            suggested = max(1, (min_t * 2) - qty)
             item = {
                 "product_id": enr["id"], "product_name": enr["name"],
                 "quantity": suggested, "unit_price": enr.get("unit_price", 0.0),
