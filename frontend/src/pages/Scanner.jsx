@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ScanLine, ArrowDownToLine, ArrowUpFromLine, Package, Check, X, Keyboard } from "lucide-react";
+import { ScanLine, ArrowDownToLine, ArrowUpFromLine, Package, Check, X, Keyboard, Calendar } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -16,6 +16,7 @@ export default function Scanner() {
   const [mode, setMode] = useState(() => localStorage.getItem(MODE_KEY) || "out");
   const [quantity, setQuantity] = useState(1);
   const [barcode, setBarcode] = useState("");
+  const [expiryDate, setExpiryDate] = useState(""); // péremption du lot pour entrées scannées
   const [history, setHistory] = useState([]);
   const [lastProduct, setLastProduct] = useState(null);
   const [flash, setFlash] = useState(false);
@@ -41,7 +42,12 @@ export default function Scanner() {
     const code = barcode.trim();
     if (!code) return;
     try {
-      const result = await scanAction({ barcode: code, type: mode, quantity: Number(quantity) || 1 });
+      const result = await scanAction({
+        barcode: code,
+        type: mode,
+        quantity: Number(quantity) || 1,
+        expiry_date: mode === "in" && expiryDate ? expiryDate : null,
+      });
       setLastProduct(result.product);
       setHistory((h) => [{ ok: true, ...result, at: new Date().toISOString() }, ...h].slice(0, 30));
       setFlash(true);
@@ -133,6 +139,39 @@ export default function Scanner() {
               </Button>
             </div>
           </div>
+
+          {isIn && (
+            <div data-testid="scan-expiry-block">
+              <label className="block text-xs font-bold uppercase tracking-[0.18em] text-stone-500 mb-2">
+                Date de péremption du lot (optionnel)
+              </label>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    data-testid="scan-expiry-input"
+                    className="h-12 pl-10 w-56 font-mono text-stone-700"
+                  />
+                </div>
+                {expiryDate && (
+                  <button
+                    type="button"
+                    onClick={() => setExpiryDate("")}
+                    className="h-12 px-3 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700 text-sm font-medium"
+                    data-testid="scan-expiry-clear"
+                  >
+                    Effacer
+                  </button>
+                )}
+                <p className="text-xs text-stone-500 ml-1">
+                  Conservée entre les scans · Met à jour la péremption du produit uniquement si plus proche (FEFO).
+                </p>
+              </div>
+            </div>
+          )}
         </form>
 
         {lastProduct && (

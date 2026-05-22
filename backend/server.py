@@ -185,6 +185,7 @@ class ScanAction(BaseModel):
     type: Literal["in", "out"] = "out"
     quantity: int = 1
     reason: Optional[str] = ""
+    expiry_date: Optional[str] = None
 
 
 # ===================== Schema =====================
@@ -874,21 +875,30 @@ async def scan_action(payload: ScanAction):
         new_qty = prod["quantity"] + payload.quantity if payload.type == "in" else prod["quantity"] - payload.quantity
         if new_qty < 0:
             raise HTTPException(400, "Stock insuffisant")
+
+        # FEFO : si scan d'entrée avec une péremption, on remplace la péremption du produit
+        # uniquement si la nouvelle date est plus proche que l'actuelle (ou s'il n'y en a pas).
+        new_expiry_for_product = prod.get("expiry_date")
+        lot_expiry = payload.expiry_date if payload.type == "in" else None
+        if lot_expiry and (not prod.get("expiry_date") or lot_expiry < prod["expiry_date"]):
+            new_expiry_for_product = lot_expiry
+
         await conn.execute(
-            "UPDATE products SET quantity=?, updated_at=? WHERE id=?",
-            (new_qty, now_iso(), prod["id"]),
+            "UPDATE products SET quantity=?, expiry_date=?, updated_at=? WHERE id=?",
+            (new_qty, new_expiry_for_product, now_iso(), prod["id"]),
         )
         mov = Movement(
             product_id=prod["id"], product_name=prod["name"],
             type=payload.type, quantity=payload.quantity,
             reason=payload.reason or ("Scan entrée" if payload.type == "in" else "Scan sortie"),
+            expiry_date=lot_expiry,
         )
         await conn.execute(
             "INSERT INTO movements (id, product_id, product_name, type, quantity, reason, note, expiry_date, created_at) "
             "VALUES (?,?,?,?,?,?,?,?,?)",
-            (mov.id, mov.product_id, mov.product_name, mov.type, mov.quantity, mov.reason, mov.note, None, mov.created_at),
+            (mov.id, mov.product_id, mov.product_name, mov.type, mov.quantity, mov.reason, mov.note, mov.expiry_date, mov.created_at),
         )
-        updated_product = {**prod, "quantity": new_qty}
+        updated_product = {**prod, "quantity": new_qty, "expiry_date": new_expiry_for_product}
         return {"movement": mov.model_dump(), "product": updated_product}
 
 
@@ -929,6 +939,10 @@ async def reorder_suggestions():
         result = list(groups.values())
         for g in result:
             g["total"] = round(g["total"], 2)
+            # Trier les produits : épuisés (qty=0) en haut, puis stock faible par quantité croissante.
+            g["items"].sort(key=lambda it: it["current_quantity"])
+        # Idem pour les produits sans fournisseur.
+        standalone.sort(key=lambda it: it["current_quantity"])
         result.sort(key=lambda g: -len(g["items"]))
         return {
             "groups": result, "unassigned": standalone,
