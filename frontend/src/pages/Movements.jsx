@@ -6,7 +6,7 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import ManualMovementDialog from "../components/ManualMovementDialog";
 import { listMovements } from "../lib/api";
-import { formatDateTime } from "../lib/format";
+import { formatDate, formatDateTime } from "../lib/format";
 import { toast } from "sonner";
 
 export default function Movements() {
@@ -75,15 +75,16 @@ export default function Movements() {
               <TableHead className="font-semibold">Type</TableHead>
               <TableHead className="font-semibold">Produit</TableHead>
               <TableHead className="font-semibold">Quantité</TableHead>
+              <TableHead className="font-semibold">Péremption lot</TableHead>
               <TableHead className="font-semibold">Motif</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-12 text-stone-400">Chargement...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-12 text-stone-400">Chargement...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-16 text-stone-400">
+                <TableCell colSpan={6} className="text-center py-16 text-stone-400">
                   <div>Aucun mouvement</div>
                   <div className="text-xs text-stone-500 mt-1">Utilisez les boutons ci-dessus pour enregistrer une entrée ou une sortie.</div>
                 </TableCell>
@@ -100,6 +101,9 @@ export default function Movements() {
                 <TableCell className="font-medium text-stone-900">{m.product_name}</TableCell>
                 <TableCell className={`font-mono font-bold ${m.type === "in" ? "text-emerald-700" : "text-rose-700"}`}>
                   {m.type === "in" ? "+" : "−"}{m.quantity}
+                </TableCell>
+                <TableCell className="text-stone-700 text-sm" data-testid={`movement-expiry-${m.id}`}>
+                  {m.expiry_date ? formatDate(m.expiry_date) : <span className="text-stone-300">—</span>}
                 </TableCell>
                 <TableCell className="text-stone-600">{m.reason || "—"}</TableCell>
               </TableRow>

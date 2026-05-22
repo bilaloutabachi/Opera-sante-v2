@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Building2,
   QrCode,
+  Settings,
 } from "lucide-react";
 import { Toaster } from "../components/ui/sonner";
 
@@ -27,6 +28,7 @@ const NAV_SECONDARY = [
   { to: "/fournisseurs", label: "Fournisseurs", icon: Truck },
   { to: "/categories", label: "Catégories", icon: Tag },
   { to: "/alertes", label: "Alertes", icon: AlertTriangle },
+  { to: "/parametres", label: "Paramètres", icon: Settings },
 ];
 
 const ALL_NAV = [...NAV_MAIN, ...NAV_SECONDARY];

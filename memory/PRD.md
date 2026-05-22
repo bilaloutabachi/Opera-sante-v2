@@ -1,49 +1,63 @@
 # Opéra santé — PRD
 
-## Problem Statement
-App de gestion de stock pour cabinet dentaire (100% locale, Electron + PyInstaller + SQLite).
-Ajout d'une alerte **"Stock épuisé"** pour les produits dont la quantité = 0, avec couleur
-distincte (rouge foncé) pour bien la différencier de "Stock faible" (qty > 0).
-
-## Architecture (inchangée)
-- Backend : FastAPI + SQLite (local, fichier unique `opera.db`)
-- Frontend : React + CRA + Tailwind
+## Architecture (inchangée, intangible)
+- Backend : FastAPI + SQLite (fichier `~/.opera-sante/opera.db` ou `%APPDATA%/opera-sante/opera.db`)
+- Frontend : React + CRA + Tailwind (HashRouter)
 - Desktop : Electron + PyInstaller spawn du backend
-- **Interdit de toucher** : `electron/main.js`, `electron/package.json`, PyInstaller, structure dossiers
+- **NE PAS toucher** : `electron/main.js`, `electron/package.json`, PyInstaller spec, structure dossiers
 
-## Alertes existantes + nouvelle
-- Stock faible (qty > 0 ET qty <= seuil) — ambre
-- Périmé (date dépassée) — rose
-- Périmé bientôt (<= 60 j) — ambre
-- **[NOUVEAU] Stock épuisé (qty === 0)** — noir + bordure rouge foncé (#450a0a / red-950)
+## Features livrées
+### v1 — Alerte "Stock épuisé"
+- Backend `/api/alerts` + `/api/dashboard/stats` : `out_of_stock` + `out_of_stock_count`, exclusion mutuelle avec `low_stock`
+- Badge "STOCK ÉPUISÉ" rouge foncé `bg-red-800` + ligne `row-out-of-stock`
+- Affiché sur Dashboard, Alertes, Inventaire
+- Priorité d'affichage : `out` > `expired` > `low` > `expiring`
 
-## Règles métier
-- Exclusion mutuelle : un produit à qty=0 apparaît UNIQUEMENT dans `out_of_stock`, jamais dans `low_stock`
-- Priorité d'affichage du badge : `out` > `expired` > `low` > `expiring` > `ok`
-- Un produit épuisé ET périmé → badge "Stock épuisé" (prioritaire) ET figure aussi dans l'onglet "Périmés"
-- `reorder_count` du dashboard inclut désormais `low_stock_count + out_of_stock_count`
+### v2 — Suggestion de réapprovisionnement
+- Formule simplifiée `suggested = max(1, (min_threshold * 2) - quantity)`
+- Lit dynamiquement le seuil de chaque produit
+- Localisation : `backend/server.py` ligne 899
 
-## Ce qui a été implémenté (2026-01)
-### Backend (`backend/server.py`)
-- `/api/alerts` retourne `out_of_stock` + `low_stock` (mutuellement exclusifs)
-- `/api/dashboard/stats` retourne `out_of_stock_count`
+### v3 — Date de péremption sur entrée de stock (FEFO)
+**Backend** :
+- `Movement` + `MovementCreate` : champ optionnel `expiry_date`
+- Colonne `movements.expiry_date` (auto-migration + SCHEMA pour nouvelles bases)
+- `POST /api/movements` : si type="in" et `expiry_date` fourni, met à jour la péremption du produit
+  **uniquement si plus proche que l'actuelle** (logique FEFO – First Expired First Out)
+- Le lot expiry est enregistré dans l'historique (pas écrasé)
 
-### Frontend
-- `lib/format.js` : `productStatus` ; `out` prioritaire, nouveau `tone: "critical"`, label "Stock épuisé"
-- `components/StatusBadge.jsx` : tone `critical` (noir + bordure rouge + uppercase tracking)
-- `index.css` : classe `.row-out-of-stock` (bg red-950, texte red-100, border-left red-800)
-- `pages/Alerts.jsx` : 4ème carte résumé + 4ème onglet "Stock épuisé" (actif par défaut si count > 0)
-- `pages/Dashboard.jsx` : nouvelle StatPill "Stock épuisé" (tone critical), grid 4 colonnes
-- `pages/Inventory.jsx` : ligne `row-out-of-stock` + stripe rouge foncé pour produits épuisés ;
-  option du filtre `status=out` libellée "Stock épuisé"
+**Frontend** :
+- `ManualMovementDialog.jsx` + dialogue Mouvement dans `Inventory.jsx` : input `type="date"` optionnel
+  affiché uniquement pour les entrées (`type="in"`)
+- `Movements.jsx` : nouvelle colonne "Péremption lot" affichant `m.expiry_date`
+
+### v4 — Page Paramètres avec réinitialisation
+**Backend** : 2 nouveaux endpoints
+- `POST /api/admin/reset-inventory` → supprime tous les produits + mouvements (garde catégories + fournisseurs)
+- `POST /api/admin/reset-statistics` → supprime uniquement les mouvements (historique + stats)
+
+**Frontend** :
+- Nouvelle page `pages/Settings.jsx` + route `/parametres`
+- Item sidebar "Paramètres" (icône Settings) dans `NAV_SECONDARY`
+- `BackupCard` déplacé du Dashboard vers Settings (regroupement logique)
+- "Zone de danger" avec 2 cartes (rose + ambre) et popups de confirmation détaillées
+  listant explicitement ce qui sera supprimé
 
 ## Tests effectués
-- Backend curl : création produits (qty=0 / qty=3 / qty=50 / qty=0+périmé), alerts & dashboard OK
-- Frontend screenshots : Dashboard (stat card noir), Alerts (onglet + table), Inventory (lignes rouge foncé, badges)
-- Lint Python (ruff) + JS (eslint) : 0 issue
+- **FEFO** : 4 cas couverts (remplacement, non-remplacement, pas de date, historique) → ✅
+- **Reset endpoints** : statistics garde produits/categories/suppliers, inventory garde catégories/suppliers → ✅
+- **Lint** Python (ruff) + JS (eslint) : 0 issue
+- **Visuel** : screenshots Settings, Mouvements OK
 
-## Next Action Items
-- Aucun — feature complète selon demande utilisateur
+## Procédure utilisateur après `git pull`
+```bash
+cd backend && pyinstaller opera-backend.spec
+cp dist/opera-backend.exe ../electron/backend-dist/
+cd ../frontend && yarn build && rm -rf ../electron/frontend-dist && cp -r build ../electron/frontend-dist
+cd ../electron && npm start
+```
+Ou simplement lancer `COMPILER_OPERA_SANTE.bat`.
 
-## Backlog (P2)
-- [Idée] Sur la page "À commander", regrouper en tête les produits **épuisés** (urgence max) avant les "stock faible"
+## Backlog
+- Sur "À commander", trier les produits **épuisés** en tête (urgence > stock faible)
+- Affichage groupé par lot (FIFO multi-lots) pour les produits avec plusieurs dates de péremption

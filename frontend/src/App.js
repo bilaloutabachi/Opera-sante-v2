@@ -10,6 +10,7 @@ import Categories from "@/pages/Categories";
 import Alerts from "@/pages/Alerts";
 import Reorder from "@/pages/Reorder";
 import Labels from "@/pages/Labels";
+import Settings from "@/pages/Settings";
 function App() {
   return (
     <div className="App">
@@ -25,6 +26,7 @@ function App() {
             <Route path="/fournisseurs" element={<Suppliers />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/alertes" element={<Alerts />} />
+            <Route path="/parametres" element={<Settings />} />
           </Route>
         </Routes>
       </HashRouter>

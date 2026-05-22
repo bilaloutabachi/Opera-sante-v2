@@ -61,6 +61,7 @@ export default function Inventory() {
   const [movementType, setMovementType] = useState("in");
   const [movementQty, setMovementQty] = useState(1);
   const [movementReason, setMovementReason] = useState("");
+  const [movementExpiry, setMovementExpiry] = useState("");
   const [importOpen, setImportOpen] = useState(false);
 
   const reload = async () => {
@@ -126,11 +127,13 @@ export default function Inventory() {
         type: movementType,
         quantity: Number(movementQty) || 1,
         reason: movementReason || (movementType === "in" ? "Ajustement entrée" : "Ajustement sortie"),
+        expiry_date: movementType === "in" && movementExpiry ? movementExpiry : null,
       });
       toast.success("Mouvement enregistré");
       setMovementTarget(null);
       setMovementQty(1);
       setMovementReason("");
+      setMovementExpiry("");
       reload();
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Erreur");
@@ -415,6 +418,21 @@ export default function Inventory() {
               <Label>Motif</Label>
               <Input value={movementReason} onChange={(e) => setMovementReason(e.target.value)} placeholder={movementType === "in" ? "Réception, ajustement..." : "Utilisation, perte, péremption..."} className="mt-1.5" data-testid="movement-reason" />
             </div>
+            {movementType === "in" && (
+              <div>
+                <Label>Date de péremption du lot (optionnel)</Label>
+                <Input
+                  type="date"
+                  value={movementExpiry}
+                  onChange={(e) => setMovementExpiry(e.target.value)}
+                  className="mt-1.5"
+                  data-testid="movement-expiry"
+                />
+                <p className="text-xs text-stone-500 mt-1">
+                  Mettra à jour la péremption du produit uniquement si plus proche (FEFO).
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setMovementTarget(null)}>Annuler</Button>

@@ -13,7 +13,6 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { getDashboardStats, getReorderSuggestions } from "../lib/api";
 import { formatDateTime } from "../lib/format";
-import BackupCard from "../components/BackupCard";
 import { toast } from "sonner";
 
 export default function Dashboard() {
@@ -164,8 +163,6 @@ export default function Dashboard() {
           )}
         </Card>
       </div>
-
-      <BackupCard />
     </div>
   );
 }

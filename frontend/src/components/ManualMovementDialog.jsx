@@ -21,12 +21,13 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
   const [type, setType] = useState(defaultType);
   const [quantity, setQuantity] = useState(1);
   const [reason, setReason] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
       listProducts().then(setProducts).catch(() => toast.error("Erreur de chargement"));
-      setSearch(""); setSelected(null); setQuantity(1); setReason(""); setType(defaultType);
+      setSearch(""); setSelected(null); setQuantity(1); setReason(""); setExpiryDate(""); setType(defaultType);
     }
   }, [open, defaultType]);
 
@@ -48,6 +49,7 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
         type,
         quantity: Number(quantity) || 1,
         reason: reason || (type === "in" ? "Entrée manuelle" : "Sortie manuelle"),
+        expiry_date: type === "in" && expiryDate ? expiryDate : null,
       });
       toast.success(`${type === "in" ? "Entrée" : "Sortie"} enregistrée : ${selected.name}`);
       onOpenChange(false);
@@ -167,6 +169,22 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
                   />
                 </div>
               </div>
+
+              {type === "in" && (
+                <div>
+                  <Label>Date de péremption du lot (optionnel)</Label>
+                  <Input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="mt-1.5 h-12"
+                    data-testid="manual-expiry-input"
+                  />
+                  <p className="text-xs text-stone-500 mt-1">
+                    Si renseignée et plus proche que l'actuelle, elle remplacera la date de péremption du produit (FEFO).
+                  </p>
+                </div>
+              )}
             </>
           )}
 

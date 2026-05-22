@@ -55,3 +55,7 @@ export const restoreBackup = (file) => {
   fd.append("file", file);
   return api.post("/restore", fd, { headers: { "Content-Type": "multipart/form-data" } }).then(r => r.data);
 };
+
+// Admin / Reset
+export const resetInventory = () => api.post("/admin/reset-inventory").then(r => r.data);
+export const resetStatistics = () => api.post("/admin/reset-statistics").then(r => r.data);

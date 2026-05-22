@@ -167,6 +167,7 @@ class Movement(BaseModel):
     quantity: int
     reason: Optional[str] = ""
     note: Optional[str] = ""
+    expiry_date: Optional[str] = None  # péremption du lot entrant (uniquement type="in")
     created_at: str = Field(default_factory=now_iso)
 
 
@@ -176,6 +177,7 @@ class MovementCreate(BaseModel):
     quantity: int
     reason: Optional[str] = ""
     note: Optional[str] = ""
+    expiry_date: Optional[str] = None
 
 
 class ScanAction(BaseModel):
@@ -232,6 +234,7 @@ CREATE TABLE IF NOT EXISTS movements (
     quantity INTEGER NOT NULL,
     reason TEXT DEFAULT '',
     note TEXT DEFAULT '',
+    expiry_date TEXT,
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_movements_product ON movements(product_id);
@@ -306,6 +309,7 @@ EXPECTED_COLUMNS = {
         # add future columns here
     },
     "movements": {
+        "expiry_date": "TEXT",
         # add future columns here
     },
     "suppliers": {
@@ -834,19 +838,29 @@ async def create_movement(payload: MovementCreate):
         new_qty = prod["quantity"] + payload.quantity if payload.type == "in" else prod["quantity"] - payload.quantity
         if new_qty < 0:
             raise HTTPException(400, "Stock insuffisant")
+
+        # FEFO : si entrée avec une péremption, on remplace la péremption du produit
+        # uniquement si la nouvelle date est plus proche que l'actuelle (ou s'il n'y en a pas).
+        new_expiry_for_product = prod.get("expiry_date")
+        lot_expiry = payload.expiry_date if payload.type == "in" else None
+        if lot_expiry and (not prod.get("expiry_date") or lot_expiry < prod["expiry_date"]):
+            new_expiry_for_product = lot_expiry
+
         await conn.execute(
-            "UPDATE products SET quantity=?, updated_at=? WHERE id=?",
-            (new_qty, now_iso(), payload.product_id),
+            "UPDATE products SET quantity=?, expiry_date=?, updated_at=? WHERE id=?",
+            (new_qty, new_expiry_for_product, now_iso(), payload.product_id),
         )
         mov = Movement(
             product_id=payload.product_id, product_name=prod["name"],
             type=payload.type, quantity=payload.quantity,
             reason=payload.reason or "", note=payload.note or "",
+            expiry_date=lot_expiry,
         )
         await conn.execute(
-            "INSERT INTO movements (id, product_id, product_name, type, quantity, reason, note, created_at) "
-            "VALUES (?,?,?,?,?,?,?,?)",
-            (mov.id, mov.product_id, mov.product_name, mov.type, mov.quantity, mov.reason, mov.note, mov.created_at),
+            "INSERT INTO movements (id, product_id, product_name, type, quantity, reason, note, expiry_date, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (mov.id, mov.product_id, mov.product_name, mov.type, mov.quantity,
+             mov.reason, mov.note, mov.expiry_date, mov.created_at),
         )
     return mov
 
@@ -870,9 +884,9 @@ async def scan_action(payload: ScanAction):
             reason=payload.reason or ("Scan entrée" if payload.type == "in" else "Scan sortie"),
         )
         await conn.execute(
-            "INSERT INTO movements (id, product_id, product_name, type, quantity, reason, note, created_at) "
-            "VALUES (?,?,?,?,?,?,?,?)",
-            (mov.id, mov.product_id, mov.product_name, mov.type, mov.quantity, mov.reason, mov.note, mov.created_at),
+            "INSERT INTO movements (id, product_id, product_name, type, quantity, reason, note, expiry_date, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (mov.id, mov.product_id, mov.product_name, mov.type, mov.quantity, mov.reason, mov.note, None, mov.created_at),
         )
         updated_product = {**prod, "quantity": new_qty}
         return {"movement": mov.model_dump(), "product": updated_product}
@@ -1010,6 +1024,35 @@ async def restore_db(file: UploadFile = File(...)):
         f.write(content)
     os.replace(tmp, DB_PATH)
     return {"ok": True, "message": "Base restaurée. Redémarrez l'application pour finaliser."}
+
+
+# ===================== Admin / Reset =====================
+@api_router.post("/admin/reset-inventory")
+async def reset_inventory():
+    """Supprime tous les produits et mouvements. Conserve catégories et fournisseurs.
+    Équivalent à une installation fraîche côté inventaire."""
+    async with get_db() as conn:
+        await conn.execute("DELETE FROM movements")
+        await conn.execute("DELETE FROM products")
+        deleted_products = (await one(conn, "SELECT COUNT(*) AS c FROM products"))["c"]
+        deleted_movements = (await one(conn, "SELECT COUNT(*) AS c FROM movements"))["c"]
+    logger.info("Inventory reset")
+    return {
+        "ok": True,
+        "message": "Inventaire réinitialisé",
+        "remaining_products": deleted_products,
+        "remaining_movements": deleted_movements,
+    }
+
+
+@api_router.post("/admin/reset-statistics")
+async def reset_statistics():
+    """Supprime uniquement l'historique des mouvements. Les produits et leur stock actuel
+    sont conservés. Utile pour repartir d'une page blanche statistique."""
+    async with get_db() as conn:
+        await conn.execute("DELETE FROM movements")
+    logger.info("Statistics (movements history) reset")
+    return {"ok": True, "message": "Historique des mouvements supprimé"}
 
 
 app.include_router(api_router)
