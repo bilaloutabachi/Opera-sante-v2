@@ -263,6 +263,7 @@ export default function Inventory() {
               <TableHead className="font-semibold text-stone-700">Marque</TableHead>
               <TableHead className="font-semibold text-stone-700">Catégorie</TableHead>
               <TableHead className="font-semibold text-stone-700">Stock</TableHead>
+              <TableHead className="font-semibold text-stone-700">Prix unitaire</TableHead>
               <TableHead className="font-semibold text-stone-700">Conso. / mois</TableHead>
               <TableHead className="font-semibold text-stone-700">Péremption</TableHead>
               <TableHead className="font-semibold text-stone-700">Code-barres</TableHead>
@@ -271,9 +272,9 @@ export default function Inventory() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-12 text-stone-400">Chargement...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-12 text-stone-400">Chargement...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-12 text-stone-400">Aucun produit</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-12 text-stone-400">Aucun produit</TableCell></TableRow>
             ) : filtered.map((p) => {
               const status = productStatus(p);
               const rowClass = status.key === "out"
@@ -311,7 +312,14 @@ export default function Inventory() {
                   </TableCell>
                   <TableCell>
                     <div className="font-heading font-bold text-xl text-stone-900 leading-none">{p.quantity}</div>
-                    <div className="text-[11px] text-stone-500 mt-1">min {p.min_threshold} · {formatEuro(p.unit_price)}</div>
+                    <div className="text-[11px] text-stone-500 mt-1">min {p.min_threshold}</div>
+                  </TableCell>
+                  <TableCell data-testid={`product-price-${p.id}`}>
+                    {p.unit_price && p.unit_price > 0 ? (
+                      <span className="font-mono font-semibold text-stone-900">{formatEuro(p.unit_price)}</span>
+                    ) : (
+                      <span className="text-stone-300">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-stone-700">
                     {p.avg_monthly_usage ? <span className="font-mono font-semibold">{p.avg_monthly_usage}</span> : <span className="text-stone-300">—</span>}

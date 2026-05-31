@@ -108,8 +108,12 @@ export default function Reorder() {
 
                           <div className="text-right min-w-[90px]">
                             <div className="text-[10px] text-stone-500 uppercase font-semibold tracking-wider">Sous-total</div>
-                            <div className="font-heading font-bold text-stone-900">{formatEuro(item.quantity * item.unit_price)}</div>
-                            <div className="text-[10px] text-stone-400">× {formatEuro(item.unit_price)}</div>
+                            <div className="font-heading font-bold text-stone-900">
+                              {item.unit_price > 0 ? formatEuro(item.quantity * item.unit_price) : <span className="text-stone-300">—</span>}
+                            </div>
+                            <div className="text-[10px] text-stone-400">
+                              {item.unit_price > 0 ? `× ${formatEuro(item.unit_price)}` : "prix non renseigné"}
+                            </div>
                           </div>
 
                           {item.product_url ? (

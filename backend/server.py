@@ -626,8 +626,13 @@ def _parse_int_csv(v, default=None):
 def _parse_float_csv(v, default=None):
     if v is None or str(v).strip() == "":
         return default
+    s = str(v).strip().replace(",", ".")
+    # tolère "12,50 €", "12.50€", "  10 ", "EUR 5.00" etc.
+    cleaned = "".join(c for c in s if c.isdigit() or c in ".-")
+    if not cleaned or cleaned in ("-", ".", "-."):
+        return default
     try:
-        return float(str(v).replace(",", ".").strip())
+        return float(cleaned)
     except (ValueError, TypeError):
         return default
 
@@ -939,10 +944,11 @@ async def reorder_suggestions():
         result = list(groups.values())
         for g in result:
             g["total"] = round(g["total"], 2)
-            # Trier les produits : épuisés (qty=0) en haut, puis stock faible par quantité croissante.
-            g["items"].sort(key=lambda it: it["current_quantity"])
+            # Trier : épuisés (qty=0) en haut, puis stock faible par qty croissante.
+            # En cas d'égalité de stock, tri alphabétique du nom du produit (insensible à la casse).
+            g["items"].sort(key=lambda it: (it["current_quantity"], (it["product_name"] or "").lower()))
         # Idem pour les produits sans fournisseur.
-        standalone.sort(key=lambda it: it["current_quantity"])
+        standalone.sort(key=lambda it: (it["current_quantity"], (it["product_name"] or "").lower()))
         result.sort(key=lambda g: -len(g["items"]))
         return {
             "groups": result, "unassigned": standalone,
