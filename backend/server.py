@@ -942,13 +942,16 @@ async def reorder_suggestions():
             else:
                 standalone.append(item)
         result = list(groups.values())
+        # Tri à l'intérieur de chaque groupe fournisseur :
+        # Groupe 1 = produits épuisés (qty=0), tri alphabétique par nom.
+        # Groupe 2 = produits en stock faible (qty>0), tri alphabétique par nom (sans sous-tri par qty).
+        def _sort_key(it):
+            name = (it["product_name"] or "").lower()
+            return (0 if it["current_quantity"] == 0 else 1, name)
         for g in result:
             g["total"] = round(g["total"], 2)
-            # Trier : épuisés (qty=0) en haut, puis stock faible par qty croissante.
-            # En cas d'égalité de stock, tri alphabétique du nom du produit (insensible à la casse).
-            g["items"].sort(key=lambda it: (it["current_quantity"], (it["product_name"] or "").lower()))
-        # Idem pour les produits sans fournisseur.
-        standalone.sort(key=lambda it: (it["current_quantity"], (it["product_name"] or "").lower()))
+            g["items"].sort(key=_sort_key)
+        standalone.sort(key=_sort_key)
         result.sort(key=lambda g: -len(g["items"]))
         return {
             "groups": result, "unassigned": standalone,

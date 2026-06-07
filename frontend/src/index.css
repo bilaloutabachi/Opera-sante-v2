@@ -128,3 +128,96 @@ code, .font-mono {
     outline: 2px solid #10b981;
     outline-offset: 2px;
 }
+
+/* ===================== Impression ===================== */
+/* Par défaut, masquer le tableau d'impression à l'écran. */
+.print-only {
+    display: none;
+}
+
+@media print {
+    /* Masquer la sidebar, header, toolbars, cartes écran */
+    aside,
+    header,
+    .no-print,
+    [data-testid="app-layout"] > div > header {
+        display: none !important;
+    }
+
+    /* Afficher uniquement le bloc d'impression */
+    .print-only {
+        display: block !important;
+    }
+
+    /* Layout pleine page, sans marges fantaisistes */
+    body, html, [data-testid="app-layout"], [data-testid="page-main"], .App {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+    }
+    [data-testid="page-main"] {
+        padding: 8mm !important;
+        overflow: visible !important;
+    }
+    [data-testid="reorder-page"] {
+        gap: 0 !important;
+    }
+
+    .print-title {
+        font-size: 14pt;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        color: #111;
+    }
+
+    /* Tableau type Excel : compact, lignes fines */
+    table.print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9pt;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        color: #111;
+    }
+    table.print-table th,
+    table.print-table td {
+        border: 1px solid #444;
+        padding: 3px 6px;
+        line-height: 1.25;
+    }
+    table.print-table thead th {
+        background-color: #e5e5e5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-weight: 700;
+        text-align: left;
+        font-size: 8.5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    table.print-table td.num,
+    table.print-table th.num {
+        text-align: right;
+        white-space: nowrap;
+    }
+    table.print-table .bold {
+        font-weight: 700;
+    }
+    table.print-table tbody tr:nth-child(even) td {
+        background-color: #f7f7f7 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    table.print-table tfoot td {
+        background-color: #d4d4d4 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-weight: 700;
+        font-size: 9.5pt;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+}

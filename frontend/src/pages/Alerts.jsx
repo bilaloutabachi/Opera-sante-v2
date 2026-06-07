@@ -2,39 +2,28 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Clock, XCircle, PackageX } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { getAlerts } from "../lib/api";
 import { formatDate, daysUntil } from "../lib/format";
 import { toast } from "sonner";
 
-export default function Alerts() {
-  const [data, setData] = useState({ out_of_stock: [], low_stock: [], expired: [], expiring_soon: [] });
-  const [loading, setLoading] = useState(true);
+const TONES = {
+  warning: "bg-amber-50 border-amber-200 text-amber-800",
+  danger: "bg-rose-50 border-rose-200 text-rose-800",
+  success: "bg-emerald-50 border-emerald-200 text-emerald-800",
+  critical: "bg-red-800 border-2 border-red-900 text-red-50",
+};
 
-  useEffect(() => {
-    getAlerts()
-      .then((d) => setData({ out_of_stock: [], ...d }))
-      .catch(() => toast.error("Erreur de chargement"))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const counts = useMemo(() => ({
-    out: (data.out_of_stock || []).length,
-    low: data.low_stock.length,
-    expired: data.expired.length,
-    soon: data.expiring_soon.length,
-  }), [data]);
-
-  const Summary = ({ icon: Icon, label, count, tone, testId }) => {
-    const tones = {
-      warning: "bg-amber-50 border-amber-200 text-amber-800",
-      danger: "bg-rose-50 border-rose-200 text-rose-800",
-      success: "bg-emerald-50 border-emerald-200 text-emerald-800",
-      critical: "bg-red-800 border-2 border-red-900 text-red-50",
-    };
-    const iconBg = tone === "critical" ? "bg-red-900/60" : "bg-white/60";
-    return (
-      <Card className={`p-5 border ${tones[tone]}`} data-testid={testId}>
+function AlertCard({ icon: Icon, label, count, tone, value, active, onClick, testId }) {
+  const iconBg = tone === "critical" ? "bg-red-900/60" : "bg-white/60";
+  const isActive = active === value;
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(value)}
+      data-testid={testId}
+      className={`text-left transition-all ${isActive ? "ring-4 ring-emerald-500/30 -translate-y-0.5 shadow-md" : "hover:-translate-y-0.5 hover:shadow-sm opacity-90"}`}
+    >
+      <Card className={`p-5 border ${TONES[tone]}`}>
         <div className="flex items-center gap-4">
           <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${iconBg}`}>
             <Icon className="w-5 h-5" />
@@ -45,10 +34,12 @@ export default function Alerts() {
           </div>
         </div>
       </Card>
-    );
-  };
+    </button>
+  );
+}
 
-  const TableOutOfStock = ({ items }) => (
+function TableOutOfStock({ items }) {
+  return (
     <Table>
       <TableHeader className="bg-stone-50">
         <TableRow>
@@ -70,8 +61,10 @@ export default function Alerts() {
       </TableBody>
     </Table>
   );
+}
 
-  const TableLowStock = ({ items }) => (
+function TableLowStock({ items }) {
+  return (
     <Table>
       <TableHeader className="bg-stone-50">
         <TableRow>
@@ -93,8 +86,10 @@ export default function Alerts() {
       </TableBody>
     </Table>
   );
+}
 
-  const TableExpiry = ({ items, expired }) => (
+function TableExpiry({ items, expired }) {
+  return (
     <Table>
       <TableHeader className="bg-stone-50">
         <TableRow>
@@ -123,33 +118,58 @@ export default function Alerts() {
       </TableBody>
     </Table>
   );
+}
 
-  if (loading) return <div className="text-stone-500">Chargement...</div>;
+function pickInitialFilter(d) {
+  if ((d.out_of_stock || []).length > 0) return "out";
+  if ((d.low_stock || []).length > 0) return "low";
+  if ((d.expired || []).length > 0) return "expired";
+  return "soon";
+}
+
+export default function Alerts() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState("out");
+
+  useEffect(() => {
+    getAlerts()
+      .then((d) => {
+        const safe = { out_of_stock: [], low_stock: [], expired: [], expiring_soon: [], ...d };
+        setData(safe);
+        setActive(pickInitialFilter(safe));
+      })
+      .catch(() => toast.error("Erreur de chargement"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const counts = useMemo(() => ({
+    out: (data?.out_of_stock || []).length,
+    low: (data?.low_stock || []).length,
+    expired: (data?.expired || []).length,
+    soon: (data?.expiring_soon || []).length,
+  }), [data]);
+
+  if (loading || !data) return <div className="text-stone-500">Chargement...</div>;
+
+  const renderActiveTable = () => {
+    if (active === "out") return <TableOutOfStock items={data.out_of_stock} />;
+    if (active === "low") return <TableLowStock items={data.low_stock} />;
+    if (active === "expired") return <TableExpiry items={data.expired} expired />;
+    return <TableExpiry items={data.expiring_soon} />;
+  };
 
   return (
     <div className="space-y-6" data-testid="alerts-page">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Summary icon={PackageX} label="Stock épuisé" count={counts.out} tone="critical" testId="summary-out-of-stock" />
-        <Summary icon={AlertTriangle} label="Stock faible" count={counts.low} tone="warning" testId="summary-low-stock" />
-        <Summary icon={XCircle} label="Périmés" count={counts.expired} tone="danger" testId="summary-expired" />
-        <Summary icon={Clock} label="Expirent bientôt" count={counts.soon} tone="warning" testId="summary-expiring" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AlertCard icon={PackageX}      label="Stock épuisé"    count={counts.out}     tone="critical" value="out"     active={active} onClick={setActive} testId="card-out-of-stock" />
+        <AlertCard icon={AlertTriangle} label="Stock faible"    count={counts.low}     tone="warning"  value="low"     active={active} onClick={setActive} testId="card-low-stock" />
+        <AlertCard icon={Clock}         label="Périmé bientôt"  count={counts.soon}    tone="warning"  value="soon"    active={active} onClick={setActive} testId="card-expiring" />
+        <AlertCard icon={XCircle}       label="Expiré"          count={counts.expired} tone="danger"   value="expired" active={active} onClick={setActive} testId="card-expired" />
       </div>
 
-      <Card className="bg-white border-stone-200 p-6">
-        <Tabs defaultValue={counts.out > 0 ? "out" : "low"} data-testid="alerts-tabs">
-          <TabsList className="bg-stone-100">
-            <TabsTrigger value="out" data-testid="tab-out-of-stock" className="data-[state=active]:bg-red-800 data-[state=active]:text-red-50">
-              Stock épuisé ({counts.out})
-            </TabsTrigger>
-            <TabsTrigger value="low" data-testid="tab-low-stock">Stock faible ({counts.low})</TabsTrigger>
-            <TabsTrigger value="expired" data-testid="tab-expired">Périmés ({counts.expired})</TabsTrigger>
-            <TabsTrigger value="soon" data-testid="tab-expiring">Expirent bientôt ({counts.soon})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="out" className="mt-5"><TableOutOfStock items={data.out_of_stock || []} /></TabsContent>
-          <TabsContent value="low" className="mt-5"><TableLowStock items={data.low_stock} /></TabsContent>
-          <TabsContent value="expired" className="mt-5"><TableExpiry items={data.expired} expired /></TabsContent>
-          <TabsContent value="soon" className="mt-5"><TableExpiry items={data.expiring_soon} /></TabsContent>
-        </Tabs>
+      <Card className="bg-white border-stone-200 p-6" data-testid="alerts-active-list">
+        {renderActiveTable()}
       </Card>
     </div>
   );
