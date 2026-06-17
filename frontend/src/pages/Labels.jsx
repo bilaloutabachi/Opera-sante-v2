@@ -67,12 +67,15 @@ export default function Labels() {
   };
 
   const labelsToPrint = useMemo(() => {
+    // Récupère les produits sélectionnés, les trie par nom A→Z, puis applique le nombre de copies.
+    const picked = Object.entries(selected)
+      .map(([pid, copies]) => ({ product: products.find((x) => x.id === pid), copies }))
+      .filter(({ product }) => product && product.barcode)
+      .sort((a, b) => (a.product.name || "").localeCompare(b.product.name || "", "fr", { sensitivity: "base" }));
     const out = [];
-    Object.entries(selected).forEach(([pid, copies]) => {
-      const p = products.find((x) => x.id === pid);
-      if (!p || !p.barcode) return;
-      for (let i = 0; i < copies; i++) out.push(p);
-    });
+    for (const { product, copies } of picked) {
+      for (let i = 0; i < copies; i++) out.push(product);
+    }
     return out;
   }, [selected, products]);
 
