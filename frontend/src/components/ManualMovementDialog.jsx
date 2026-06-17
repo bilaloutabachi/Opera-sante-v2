@@ -137,13 +137,13 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
             </>
           ) : (
             <>
-              <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 flex items-center gap-3 w-full">
+              <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 flex items-center gap-3 w-full max-w-full overflow-hidden">
                 <div className="w-10 h-10 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0">
                   <Package className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0 overflow-hidden">
                   <div
-                    className="font-semibold text-stone-900 break-words line-clamp-2 leading-snug"
+                    className="font-semibold text-stone-900 leading-snug line-clamp-2 [overflow-wrap:anywhere] [word-break:break-word]"
                     title={selected.name}
                   >
                     {selected.name}

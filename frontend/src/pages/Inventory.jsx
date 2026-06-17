@@ -416,9 +416,9 @@ export default function Inventory() {
               {movementType === "in" ? "Entrée de stock" : "Sortie de stock"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="p-4 rounded-lg bg-stone-50 border border-stone-200">
-              <div className="font-semibold text-stone-900 break-words line-clamp-2 leading-snug" title={movementTarget?.name}>
+          <div className="space-y-4 pt-2 w-full overflow-hidden">
+            <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 w-full max-w-full overflow-hidden">
+              <div className="font-semibold text-stone-900 leading-snug line-clamp-2 [overflow-wrap:anywhere] [word-break:break-word]" title={movementTarget?.name}>
                 {movementTarget?.name}
               </div>
               <div className="text-sm text-stone-500 mt-1">
