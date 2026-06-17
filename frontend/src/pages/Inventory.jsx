@@ -409,7 +409,7 @@ export default function Inventory() {
       <Dialog open={!!movementTarget} onOpenChange={(o) => !o && setMovementTarget(null)}>
         <DialogContent
           data-testid="movement-dialog"
-          className="w-[calc(100vw-2rem)] sm:w-[520px] max-w-[520px]"
+          className="w-[calc(100vw-2rem)] sm:!w-[600px] sm:!max-w-[600px] sm:min-w-[480px]"
         >
           <DialogHeader>
             <DialogTitle className="font-heading">

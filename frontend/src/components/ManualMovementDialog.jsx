@@ -64,7 +64,7 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[calc(100vw-2rem)] sm:w-[640px] max-w-[640px] max-h-[90vh] overflow-y-auto"
+        className="w-[calc(100vw-2rem)] sm:!w-[720px] sm:!max-w-[720px] sm:min-w-[560px] max-h-[90vh] overflow-y-auto"
         data-testid="manual-movement-dialog"
       >
         <DialogHeader>
