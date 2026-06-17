@@ -63,7 +63,10 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="manual-movement-dialog">
+      <DialogContent
+        className="w-[calc(100vw-2rem)] sm:w-[640px] max-w-[640px] max-h-[90vh] overflow-y-auto"
+        data-testid="manual-movement-dialog"
+      >
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl">Mouvement manuel</DialogTitle>
           <DialogDescription>Sans scan : cherchez le produit et enregistrez une entrée ou une sortie.</DialogDescription>
@@ -134,15 +137,31 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
             </>
           ) : (
             <>
-              <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 flex items-center gap-3">
+              <div className="p-4 rounded-lg bg-stone-50 border border-stone-200 flex items-center gap-3 w-full">
                 <div className="w-10 h-10 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0">
                   <Package className="w-5 h-5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-stone-900 truncate">{selected.name}</div>
-                  <div className="text-xs text-stone-500">Stock : <span className="font-mono font-bold">{selected.quantity}</span></div>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div
+                    className="font-semibold text-stone-900 break-words line-clamp-2 leading-snug"
+                    title={selected.name}
+                  >
+                    {selected.name}
+                  </div>
+                  <div className="text-xs text-stone-500 mt-0.5">
+                    Stock : <span className="font-mono font-bold">{selected.quantity}</span>
+                  </div>
                 </div>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setSelected(null)} data-testid="manual-change-product-btn">Changer</Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelected(null)}
+                  data-testid="manual-change-product-btn"
+                  className="shrink-0"
+                >
+                  Changer
+                </Button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -181,7 +200,7 @@ export default function ManualMovementDialog({ open, onOpenChange, defaultType =
                     data-testid="manual-expiry-input"
                   />
                   <p className="text-xs text-stone-500 mt-1">
-                    Si renseignée et plus proche que l'actuelle, elle remplacera la date de péremption du produit (FEFO).
+                    Si renseignée et plus proche que l&apos;actuelle, elle remplacera la date de péremption du produit (FEFO).
                   </p>
                 </div>
               )}

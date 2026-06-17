@@ -407,7 +407,10 @@ export default function Inventory() {
       </AlertDialog>
 
       <Dialog open={!!movementTarget} onOpenChange={(o) => !o && setMovementTarget(null)}>
-        <DialogContent data-testid="movement-dialog">
+        <DialogContent
+          data-testid="movement-dialog"
+          className="w-[calc(100vw-2rem)] sm:w-[520px] max-w-[520px]"
+        >
           <DialogHeader>
             <DialogTitle className="font-heading">
               {movementType === "in" ? "Entrée de stock" : "Sortie de stock"}
@@ -415,8 +418,12 @@ export default function Inventory() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="p-4 rounded-lg bg-stone-50 border border-stone-200">
-              <div className="font-semibold">{movementTarget?.name}</div>
-              <div className="text-sm text-stone-500">Stock actuel : <span className="font-mono font-bold">{movementTarget?.quantity}</span></div>
+              <div className="font-semibold text-stone-900 break-words line-clamp-2 leading-snug" title={movementTarget?.name}>
+                {movementTarget?.name}
+              </div>
+              <div className="text-sm text-stone-500 mt-1">
+                Stock actuel : <span className="font-mono font-bold">{movementTarget?.quantity}</span>
+              </div>
             </div>
             <div>
               <Label>Quantité</Label>
