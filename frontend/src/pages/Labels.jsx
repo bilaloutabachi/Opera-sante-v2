@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Barcode from "react-barcode";
 import { QRCodeSVG } from "qrcode.react";
-import { Search, Printer, Sparkles, Package, Check, Minus, Plus } from "lucide-react";
+import { Search, Printer, Sparkles, Package, Check, Minus, Plus, CheckSquare, X } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -66,6 +66,62 @@ export default function Labels() {
     }
   };
 
+  // Tout sélectionner : sélectionne tous les produits filtrés ayant un code-barres.
+  // Si tous sont déjà sélectionnés, désélectionne tout (toggle).
+  const handleSelectAll = () => {
+    const eligible = filtered.filter((p) => p.barcode);
+    if (eligible.length === 0) {
+      toast.error("Aucun produit avec code-barres dans la liste");
+      return;
+    }
+    const allSelected = eligible.every((p) => selected[p.id] != null);
+    if (allSelected) {
+      // Désélectionne uniquement les produits filtrés (préserve hors filtre)
+      setSelected((s) => {
+        const next = { ...s };
+        eligible.forEach((p) => delete next[p.id]);
+        return next;
+      });
+      toast.success(`${eligible.length} produit${eligible.length > 1 ? "s" : ""} désélectionné${eligible.length > 1 ? "s" : ""}`);
+    } else {
+      setSelected((s) => {
+        const next = { ...s };
+        eligible.forEach((p) => { if (next[p.id] == null) next[p.id] = 1; });
+        return next;
+      });
+      toast.success(`${eligible.length} produit${eligible.length > 1 ? "s" : ""} sélectionné${eligible.length > 1 ? "s" : ""}`);
+    }
+  };
+
+  // Tout générer : crée un code-barres pour chaque produit filtré qui n'en a pas encore.
+  const handleGenerateAll = async () => {
+    const missing = filtered.filter((p) => !p.barcode);
+    if (missing.length === 0) {
+      toast.success("Tous les produits visibles ont déjà un code-barres");
+      return;
+    }
+    setGenerating("__all__");
+    let ok = 0;
+    let fail = 0;
+    for (const p of missing) {
+      try {
+        const updated = await generateBarcode(p.id);
+        setProducts((ps) => ps.map((x) => (x.id === p.id ? updated : x)));
+        ok += 1;
+      } catch {
+        fail += 1;
+      }
+    }
+    setGenerating(null);
+    if (fail === 0) toast.success(`${ok} code${ok > 1 ? "s" : ""}-barres généré${ok > 1 ? "s" : ""}`);
+    else toast.error(`${ok} générés, ${fail} en échec`);
+  };
+
+  // Indicateurs d'état pour les boutons
+  const eligibleCount = filtered.filter((p) => p.barcode).length;
+  const allFilteredSelected = eligibleCount > 0 && filtered.filter((p) => p.barcode).every((p) => selected[p.id] != null);
+  const missingCount = filtered.filter((p) => !p.barcode).length;
+
   const labelsToPrint = useMemo(() => {
     // Récupère les produits sélectionnés, les trie par nom A→Z, puis applique le nombre de copies.
     const picked = Object.entries(selected)
@@ -100,7 +156,7 @@ export default function Labels() {
             <div>
               <h2 className="font-heading text-xl font-bold text-stone-900">Étiquettes à imprimer</h2>
               <p className="text-stone-500 text-sm mt-1 max-w-2xl">
-                Sélectionnez les produits, choisissez le nombre d'étiquettes, puis imprimez. Pour les produits sans code-barres (ex: tube de composite seul), cliquez sur <strong>Générer</strong> pour créer un code-barres interne unique qui sera sauvegardé et scannable.
+                Sélectionnez les produits, choisissez le nombre d&apos;étiquettes, puis imprimez. Pour les produits sans code-barres (ex: tube de composite seul), cliquez sur <strong>Générer</strong> pour créer un code-barres interne unique qui sera sauvegardé et scannable.
               </p>
             </div>
             <Button onClick={handlePrint} disabled={totalLabels === 0} size="lg" className="bg-emerald-700 hover:bg-emerald-800 gap-2" data-testid="print-labels-btn">
@@ -120,7 +176,7 @@ export default function Labels() {
               </Select>
             </div>
             <div>
-              <Label>Taille de l'étiquette</Label>
+              <Label>Taille de l&apos;étiquette</Label>
               <Select value={size} onValueChange={setSize}>
                 <SelectTrigger className="mt-1.5" data-testid="size-select"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -143,8 +199,8 @@ export default function Labels() {
         </Card>
 
         <Card className="bg-white border-stone-200">
-          <div className="p-4 border-b border-stone-100">
-            <div className="relative">
+          <div className="p-4 border-b border-stone-100 flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[240px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <Input
                 placeholder="Rechercher un produit..."
@@ -154,6 +210,39 @@ export default function Labels() {
                 data-testid="labels-search"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSelectAll}
+              disabled={eligibleCount === 0}
+              className="gap-1.5 shrink-0"
+              data-testid="select-all-btn"
+            >
+              {allFilteredSelected ? (
+                <>
+                  <X className="w-3.5 h-3.5" /> Tout désélectionner
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="w-3.5 h-3.5" /> Tout sélectionner ({eligibleCount})
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateAll}
+              disabled={missingCount === 0 || generating === "__all__"}
+              className="gap-1.5 shrink-0"
+              data-testid="generate-all-btn"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {generating === "__all__"
+                ? "Génération…"
+                : missingCount > 0
+                  ? `Tout générer (${missingCount})`
+                  : "Tout générer"}
+            </Button>
           </div>
           <div className="max-h-[520px] overflow-y-auto divide-y divide-stone-100">
             {filtered.length === 0 ? (
@@ -232,7 +321,7 @@ export default function Labels() {
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-500 mb-3">Aperçu</div>
             <LabelGrid labels={labelsToPrint.slice(0, 6)} format={format} size={S} />
             {totalLabels > 6 && (
-              <div className="text-xs text-stone-500 mt-3 text-center">+ {totalLabels - 6} autres étiquettes à l'impression</div>
+              <div className="text-xs text-stone-500 mt-3 text-center">+ {totalLabels - 6} autres étiquettes à l&apos;impression</div>
             )}
           </Card>
         )}
